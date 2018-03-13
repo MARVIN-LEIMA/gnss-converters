@@ -1,6 +1,11 @@
 resolver: lts-10.8
 packages:
 - .
+- location:
+    git: git@github.com:swift-nav/libsbp.git
+    commit: 234c9ae906c39468c50b72b0713480a437fad4a3
+  subdirs:
+    - haskell
+  extra-dep: true
 extra-deps:
 - rtcm-0.2.14
-- sbp-2.3.9
