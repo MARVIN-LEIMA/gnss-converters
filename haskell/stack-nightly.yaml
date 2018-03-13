@@ -3,7 +3,7 @@ packages:
 - .
 - location:
     git: git@github.com:swift-nav/libsbp.git
-    commit: 234c9ae906c39468c50b72b0713480a437fad4a3
+    commit: 421164abc12222a715f7fa9ff3ab5e78376532e2
   subdirs:
     - haskell
   extra-dep: true
