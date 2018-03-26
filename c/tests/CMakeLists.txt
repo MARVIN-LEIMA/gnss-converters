@@ -10,6 +10,13 @@ else (CMAKE_CROSSCOMPILING)
     include_directories (BEFORE ${PROJECT_SOURCE_DIR}/librtcm/c/include)
     target_link_libraries(gnss_convertor_test LINK_PUBLIC gnss-convertors)
 
+    # Set relative path prefix to make unit test paths absolute
+    set(RELATIVE_PATH_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}")
+    # Write configuration to a templated header file.
+    configure_file("../include/config.h.in"
+            "${CMAKE_CURRENT_LIST_DIR}/../include/config.h")
+
+
     add_custom_command(
         TARGET gnss_convertor_test POST_BUILD
         COMMENT "Running unit tests"
