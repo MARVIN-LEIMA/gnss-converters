@@ -132,9 +132,6 @@ void set_expected_bias(double L1CA_bias, double L1P_bias, double L2CA_bias, doub
 }
 
 int main(void) {
-  char path[256];
-  strncpy(path,RELATIVE_PATH_PREFIX,sizeof(RELATIVE_PATH_PREFIX));
-
   gps_time_sec_t current_time;
   current_time.wn = 1945;
   current_time.tow = 277500;
