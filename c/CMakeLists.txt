@@ -15,5 +15,6 @@ if(EXISTS ${CMAKE_SOURCE_DIR}/librtcm/c)
     add_subdirectory (librtcm/c)
 endif()
 
+add_subdirectory(refactor/common)
 add_subdirectory(src)
 add_subdirectory(tests)

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.7)
 
-add_library(gnss_converters rtcm3_sbp.c)
-target_link_libraries(gnss_converters m sbp rtcm)
+add_library(gnss_converters rtcm3_sbp.c nmea.c)
+target_link_libraries(gnss_converters swiftnav-common m sbp rtcm)
 target_include_directories(gnss_converters PUBLIC ${PROJECT_SOURCE_DIR}/include)
 target_include_directories(gnss_converters PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
