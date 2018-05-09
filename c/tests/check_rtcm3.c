@@ -175,14 +175,14 @@ START_TEST(test_1012_first) {
 }
 END_TEST
 
-// Test MSM is properly rejected
+/* Test MSM is properly rejected */
 START_TEST(test_msm_reject) {
   test_RTCM3(RELATIVE_PATH_PREFIX "/data/msm.rtcm", sbp_callback_msm,
              current_time);
 }
 END_TEST
 
-// Test 1033 message sources
+/* Test 1033 message sources */
 START_TEST(test_bias_trm) {
   set_expected_bias(TRIMBLE_BIAS_M, TRIMBLE_BIAS_M, TRIMBLE_BIAS_M,
                     TRIMBLE_BIAS_M);
@@ -235,7 +235,7 @@ START_TEST(test_bias_hem) {
 }
 END_TEST
 
-// Test 1033 messages from GEO++
+/* Test 1033 messages from GEO++ */
 START_TEST(test_bias_gpp_ash1) {
   set_expected_bias(GPP_ASH1_BIAS_L1CA_M, 0.0, 0.0, GPP_ASH1_BIAS_L2P_M);
   test_RTCM3(RELATIVE_PATH_PREFIX "/data/geo++_ASH1.rtcm", sbp_callback_bias,

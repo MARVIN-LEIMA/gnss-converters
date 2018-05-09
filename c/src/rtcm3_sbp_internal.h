@@ -24,8 +24,8 @@
 #define MSG_OBS_FLAGS_HALF_CYCLE_KNOWN ((u8)(1 << 2))
 
 #define SBP_FRAMING_MAX_PAYLOAD_SIZE (255u)
-#define RTCM_1029_LOGGING_LEVEL (6u)  // This represents LOG_INFO
-#define RTCM_MSM_LOGGING_LEVEL (4u)   // This represents LOG_WARN
+#define RTCM_1029_LOGGING_LEVEL (6u) /* This represents LOG_INFO */
+#define RTCM_MSM_LOGGING_LEVEL (4u)  /* This represents LOG_WARN */
 
 #define MS_TO_S 1e-3
 #define S_TO_MS 1e3
@@ -163,4 +163,4 @@ void send_sbp_log_message(const uint8_t level, const uint8_t *message,
 
 void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state);
 
-#endif  // GNSS_CONVERTERS_RTCM3_SBP_H
+#endif /* GNSS_CONVERTERS_RTCM3_SBP_H */

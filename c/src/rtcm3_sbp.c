@@ -85,8 +85,8 @@ void rtcm2sbp_decode_frame(const uint8_t *frame, uint32_t frame_length,
     case 1002: {
       rtcm_obs_message new_rtcm_obs;
       if (rtcm3_decode_1002(&frame[byte], &new_rtcm_obs) == 0) {
-        // Need to check if we've got obs in the buffer from the previous epoch
-        // and send before accepting the new message
+        /* Need to check if we've got obs in the buffer from the previous epoch
+         and send before accepting the new message */
         add_gps_obs_to_buffer(&new_rtcm_obs, state);
       }
       break;
@@ -94,8 +94,8 @@ void rtcm2sbp_decode_frame(const uint8_t *frame, uint32_t frame_length,
     case 1004: {
       rtcm_obs_message new_rtcm_obs;
       if (rtcm3_decode_1004(&frame[byte], &new_rtcm_obs) == 0) {
-        // Need to check if we've got obs in the buffer from the previous epoch
-        // and send before accepting the new message
+        /* Need to check if we've got obs in the buffer from the previous epoch
+         and send before accepting the new message */
         add_gps_obs_to_buffer(&new_rtcm_obs, state);
       }
       break;
@@ -231,13 +231,13 @@ void add_gps_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
 void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
                        gps_time_sec_t *obs_time,
                        struct rtcm3_sbp_state *state) {
-  // Transform the newly received obs to sbp
+  /* Transform the newly received obs to sbp */
   u8 new_obs[sizeof(observation_header_t) +
              MAX_OBS_PER_EPOCH * sizeof(packed_obs_content_t)];
   msg_obs_t *new_sbp_obs = (msg_obs_t *)(new_obs);
   memset((void *)new_sbp_obs, 0, sizeof(*new_sbp_obs));
 
-  // Find the buffer of obs to be sent
+  /* Find the buffer of obs to be sent */
   msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
 
   new_sbp_obs->header.t.wn = obs_time->wn;
@@ -246,16 +246,16 @@ void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
 
   rtcm3_to_sbp(new_rtcm_obs, new_sbp_obs);
 
-  // Check if the buffer already has obs of the same time
+  /* Check if the buffer already has obs of the same time */
   if (sbp_obs_buffer->header.n_obs != 0 &&
       (sbp_obs_buffer->header.t.tow != new_sbp_obs->header.t.tow ||
        state->sender_id != rtcm_2_sbp_sender_id(new_rtcm_obs->header.stn_id))) {
-    // We either have missed a message, or we have a new station. Either way,
-    // send through the current buffer and clear before adding new obs
+    /* We either have missed a message, or we have a new station. Either way,
+     send through the current buffer and clear before adding new obs */
     send_observations(state);
   }
 
-  // Copy new obs into buffer
+  /* Copy new obs into buffer */
   u8 obs_index_buffer = sbp_obs_buffer->header.n_obs;
   state->sender_id = rtcm_2_sbp_sender_id(new_rtcm_obs->header.stn_id);
   for (u8 obs_count = 0; obs_count < new_sbp_obs->header.n_obs; obs_count++) {
@@ -265,7 +265,7 @@ void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
   sbp_obs_buffer->header.n_obs = obs_index_buffer;
   sbp_obs_buffer->header.t = new_sbp_obs->header.t;
 
-  // If we aren't expecting another message, send the buffer
+  /* If we aren't expecting another message, send the buffer */
   if (new_rtcm_obs->header.sync == 0) {
     send_observations(state);
   }
@@ -750,14 +750,14 @@ void send_1029(rtcm_msg_1029 *msg_1029, struct rtcm3_sbp_state *state) {
     if ((message[message_size] & 0xF0) == 0xF0 ||
         (message[message_size] & 0xE0) == 0xF0 ||
         (message[message_size] & 0xF0) == 0xC0) {
-      // We've truncated a 2, 3 or 4 byte code unit
+      /* We've truncated a 2, 3 or 4 byte code unit */
       message_size--;
     } else if ((message[message_size - 1] & 0xF0) == 0xF0 ||
                (message[message_size - 1] & 0xE0) == 0xE0) {
-      // We've truncated a 3 or 4 byte code unit
+      /* We've truncated a 3 or 4 byte code unit */
       message_size -= 2;
     } else if ((message[message_size - 1] & 0xF0) == 0xF0) {
-      // We've truncated a 4 byte code unit
+      /* We've truncated a 4 byte code unit */
       message_size -= 3;
     }
   }
@@ -779,9 +779,9 @@ void send_sbp_log_message(const uint8_t level, const uint8_t *message,
 
 void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state) {
   if (!state->sent_msm_warning) {
-    // Only send 1 warning
+    /* Only send 1 warning */
     state->sent_msm_warning = true;
-    // Get the stn ID as well
+    /* Get the stn ID as well */
     uint32_t stn_id = 0;
     for (uint32_t i = 12; i < 24; i++) {
       stn_id = (stn_id << 1) + ((frame[i / 8] >> (7 - i % 8)) & 1u);
