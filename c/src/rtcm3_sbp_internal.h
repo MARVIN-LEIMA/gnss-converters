@@ -163,4 +163,9 @@ void send_sbp_log_message(const uint8_t level, const uint8_t *message,
 
 void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state);
 
+void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
+                           struct rtcm3_sbp_state *state);
+
+void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs);
+
 #endif /* GNSS_CONVERTERS_RTCM3_SBP_H */
