@@ -25,7 +25,7 @@
 
 #define SBP_FRAMING_MAX_PAYLOAD_SIZE (255u)
 #define RTCM_1029_LOGGING_LEVEL (6u)  // This represents LOG_INFO
-#define RTCM_MSM_LOGGING_LEVEL (4u)  // This represents LOG_WARN
+#define RTCM_MSM_LOGGING_LEVEL (4u)   // This represents LOG_WARN
 
 #define MS_TO_S 1e-3
 #define S_TO_MS 1e3
@@ -75,8 +75,10 @@ typedef enum code {
 #define NAVCOM_BIAS_L1CA_M 0.4
 #define NAVCOM_BIAS_L2P_M 2.1
 
-/* Third party receiver values as seen on a GEO++ stream from the RTCM1230 message
- * Note: these are GEO++ simulated values and not direct from the manufacturer */
+/* Third party receiver values as seen on a GEO++ stream from the RTCM1230
+ * message
+ * Note: these are GEO++ simulated values and not direct from the manufacturer
+ */
 #define GPP_ASH1_BIAS_L1CA_M -14.7
 #define GPP_ASH1_BIAS_L2P_M -16.2
 #define GPP_HEM_BIAS_L1CA_M -0.3
@@ -139,7 +141,8 @@ void add_glo_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
                            struct rtcm3_sbp_state *state);
 
 void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
-                       gps_time_sec_t *new_sbp_obs, struct rtcm3_sbp_state *state);
+                       gps_time_sec_t *new_sbp_obs,
+                       struct rtcm3_sbp_state *state);
 
 void compute_gps_time(double tow_ms, gps_time_sec_t *new_sbp_obs,
                       const gps_time_sec_t *rover_time,
@@ -154,8 +157,10 @@ bool no_1230_received(struct rtcm3_sbp_state *state);
 
 void send_1029(rtcm_msg_1029 *msg_1029, struct rtcm3_sbp_state *state);
 
-void send_sbp_log_message(const uint8_t level, const uint8_t* message, const uint16_t length, const uint16_t stn_id, struct rtcm3_sbp_state *state);
+void send_sbp_log_message(const uint8_t level, const uint8_t *message,
+                          const uint16_t length, const uint16_t stn_id,
+                          struct rtcm3_sbp_state *state);
 
 void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state);
 
-#endif // GNSS_CONVERTERS_RTCM3_SBP_H
+#endif  // GNSS_CONVERTERS_RTCM3_SBP_H

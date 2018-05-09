@@ -10,11 +10,11 @@
  * WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include "rtcm3_sbp_internal.h"
 #include <assert.h>
 #include <math.h>
 #include <rtcm3_decode.h>
 #include <string.h>
+#include "rtcm3_sbp_internal.h"
 
 static void validate_base_obs_sanity(struct rtcm3_sbp_state *state,
                                      gps_time_sec_t *obs_time,
@@ -79,122 +79,124 @@ void rtcm2sbp_decode_frame(const uint8_t *frame, uint32_t frame_length,
   uint16_t message_type = (frame[byte] << 4) | ((frame[byte + 1] >> 4) & 0xf);
 
   switch (message_type) {
-  case 1001:
-  case 1003:
-    break;
-  case 1002: {
-    rtcm_obs_message new_rtcm_obs;
-    if (rtcm3_decode_1002(&frame[byte], &new_rtcm_obs) == 0) {
-      // Need to check if we've got obs in the buffer from the previous epoch
-      // and send before accepting the new message
-      add_gps_obs_to_buffer(&new_rtcm_obs, state);
+    case 1001:
+    case 1003:
+      break;
+    case 1002: {
+      rtcm_obs_message new_rtcm_obs;
+      if (rtcm3_decode_1002(&frame[byte], &new_rtcm_obs) == 0) {
+        // Need to check if we've got obs in the buffer from the previous epoch
+        // and send before accepting the new message
+        add_gps_obs_to_buffer(&new_rtcm_obs, state);
+      }
+      break;
     }
-    break;
-  }
-  case 1004: {
-    rtcm_obs_message new_rtcm_obs;
-    if (rtcm3_decode_1004(&frame[byte], &new_rtcm_obs) == 0) {
-      // Need to check if we've got obs in the buffer from the previous epoch
-      // and send before accepting the new message
-      add_gps_obs_to_buffer(&new_rtcm_obs, state);
+    case 1004: {
+      rtcm_obs_message new_rtcm_obs;
+      if (rtcm3_decode_1004(&frame[byte], &new_rtcm_obs) == 0) {
+        // Need to check if we've got obs in the buffer from the previous epoch
+        // and send before accepting the new message
+        add_gps_obs_to_buffer(&new_rtcm_obs, state);
+      }
+      break;
     }
-    break;
-  }
-  case 1005: {
-    rtcm_msg_1005 msg_1005;
-    if (0 == rtcm3_decode_1005(&frame[byte], &msg_1005)) {
-      msg_base_pos_ecef_t sbp_base_pos;
-      rtcm3_1005_to_sbp(&msg_1005, &sbp_base_pos);
-      state->cb_rtcm_to_sbp(SBP_MSG_BASE_POS_ECEF, (u8)sizeof(sbp_base_pos),
-                            (u8 *)&sbp_base_pos,
-                            rtcm_2_sbp_sender_id(msg_1005.stn_id));
+    case 1005: {
+      rtcm_msg_1005 msg_1005;
+      if (0 == rtcm3_decode_1005(&frame[byte], &msg_1005)) {
+        msg_base_pos_ecef_t sbp_base_pos;
+        rtcm3_1005_to_sbp(&msg_1005, &sbp_base_pos);
+        state->cb_rtcm_to_sbp(SBP_MSG_BASE_POS_ECEF, (u8)sizeof(sbp_base_pos),
+                              (u8 *)&sbp_base_pos,
+                              rtcm_2_sbp_sender_id(msg_1005.stn_id));
+      }
+      break;
     }
-    break;
-  }
-  case 1006: {
-    rtcm_msg_1006 msg_1006;
-    if (0 == rtcm3_decode_1006(&frame[byte], &msg_1006)) {
-      msg_base_pos_ecef_t sbp_base_pos;
-      rtcm3_1006_to_sbp(&msg_1006, &sbp_base_pos);
-      state->cb_rtcm_to_sbp(SBP_MSG_BASE_POS_ECEF, (u8)sizeof(sbp_base_pos),
-                            (u8 *)&sbp_base_pos,
-                            rtcm_2_sbp_sender_id(msg_1006.msg_1005.stn_id));
+    case 1006: {
+      rtcm_msg_1006 msg_1006;
+      if (0 == rtcm3_decode_1006(&frame[byte], &msg_1006)) {
+        msg_base_pos_ecef_t sbp_base_pos;
+        rtcm3_1006_to_sbp(&msg_1006, &sbp_base_pos);
+        state->cb_rtcm_to_sbp(SBP_MSG_BASE_POS_ECEF, (u8)sizeof(sbp_base_pos),
+                              (u8 *)&sbp_base_pos,
+                              rtcm_2_sbp_sender_id(msg_1006.msg_1005.stn_id));
+      }
+      break;
     }
-    break;
-  }
-  case 1007:
-  case 1008:
-    break;
-  case 1010: {
-    rtcm_obs_message new_rtcm_obs;
-    if (rtcm3_decode_1010(&frame[byte], &new_rtcm_obs) == 0 &&
-        state->leap_second_known) {
-      add_glo_obs_to_buffer(&new_rtcm_obs, state);
+    case 1007:
+    case 1008:
+      break;
+    case 1010: {
+      rtcm_obs_message new_rtcm_obs;
+      if (rtcm3_decode_1010(&frame[byte], &new_rtcm_obs) == 0 &&
+          state->leap_second_known) {
+        add_glo_obs_to_buffer(&new_rtcm_obs, state);
+      }
+      break;
     }
-    break;
-  }
-  case 1012: {
-    rtcm_obs_message new_rtcm_obs;
-    if (rtcm3_decode_1012(&frame[byte], &new_rtcm_obs) == 0 &&
-        state->leap_second_known) {
-      add_glo_obs_to_buffer(&new_rtcm_obs, state);
+    case 1012: {
+      rtcm_obs_message new_rtcm_obs;
+      if (rtcm3_decode_1012(&frame[byte], &new_rtcm_obs) == 0 &&
+          state->leap_second_known) {
+        add_glo_obs_to_buffer(&new_rtcm_obs, state);
+      }
+      break;
     }
-    break;
-  }
-  case 1029: {
-    rtcm_msg_1029 msg_1029;
-    if (rtcm3_decode_1029(&frame[byte], &msg_1029) == 0) {
-      send_1029(&msg_1029, state);
+    case 1029: {
+      rtcm_msg_1029 msg_1029;
+      if (rtcm3_decode_1029(&frame[byte], &msg_1029) == 0) {
+        send_1029(&msg_1029, state);
+      }
+      break;
     }
-    break;
-  }
-  case 1033: {
-    rtcm_msg_1033 msg_1033;
-    if (rtcm3_decode_1033(&frame[byte], &msg_1033) == 0 &&
-        no_1230_received(state)) {
-      msg_glo_biases_t sbp_glo_cpb;
-      rtcm3_1033_to_sbp(&msg_1033, &sbp_glo_cpb);
-      state->cb_rtcm_to_sbp(SBP_MSG_GLO_BIASES, (u8)sizeof(sbp_glo_cpb),
-                            (u8 *)&sbp_glo_cpb,
-                            rtcm_2_sbp_sender_id(msg_1033.stn_id));
+    case 1033: {
+      rtcm_msg_1033 msg_1033;
+      if (rtcm3_decode_1033(&frame[byte], &msg_1033) == 0 &&
+          no_1230_received(state)) {
+        msg_glo_biases_t sbp_glo_cpb;
+        rtcm3_1033_to_sbp(&msg_1033, &sbp_glo_cpb);
+        state->cb_rtcm_to_sbp(SBP_MSG_GLO_BIASES, (u8)sizeof(sbp_glo_cpb),
+                              (u8 *)&sbp_glo_cpb,
+                              rtcm_2_sbp_sender_id(msg_1033.stn_id));
+      }
+      break;
     }
-    break;
-  }
-  case 1230: {
-    rtcm_msg_1230 msg_1230;
-    if (rtcm3_decode_1230(&frame[byte], &msg_1230) == 0) {
-      msg_glo_biases_t sbp_glo_cpb;
-      rtcm3_1230_to_sbp(&msg_1230, &sbp_glo_cpb);
-      state->cb_rtcm_to_sbp(SBP_MSG_GLO_BIASES, (u8)sizeof(sbp_glo_cpb),
-                            (u8 *)&sbp_glo_cpb,
-                            rtcm_2_sbp_sender_id(msg_1230.stn_id));
-      state->last_1230_received = state->time_from_rover_obs;
+    case 1230: {
+      rtcm_msg_1230 msg_1230;
+      if (rtcm3_decode_1230(&frame[byte], &msg_1230) == 0) {
+        msg_glo_biases_t sbp_glo_cpb;
+        rtcm3_1230_to_sbp(&msg_1230, &sbp_glo_cpb);
+        state->cb_rtcm_to_sbp(SBP_MSG_GLO_BIASES, (u8)sizeof(sbp_glo_cpb),
+                              (u8 *)&sbp_glo_cpb,
+                              rtcm_2_sbp_sender_id(msg_1230.stn_id));
+        state->last_1230_received = state->time_from_rover_obs;
+      }
+      break;
     }
-    break;
-  }
-  case 1071:
-  case 1072:
-  case 1073:
-  case 1074:
-  case 1075:
-  case 1076:
-  case 1077:
-  case 1081:
-  case 1082:
-  case 1083:
-  case 1084:
-  case 1085:
-  case 1086:
-  case 1087: {
-    /* MSM messages for GPS (1071-1077) and GLO (1081-1087) are currently not
-     * supported, warn the user once if these messages are seen - only warn once
-     * as these messages can be present in streams that contain 1004 and 1012 so
-     * are valid */
-    send_MSM_warning(&frame[byte], state);
-    break;
-  }
-  default:
-    break;
+    case 1071:
+    case 1072:
+    case 1073:
+    case 1074:
+    case 1075:
+    case 1076:
+    case 1077:
+    case 1081:
+    case 1082:
+    case 1083:
+    case 1084:
+    case 1085:
+    case 1086:
+    case 1087: {
+      /* MSM messages for GPS (1071-1077) and GLO (1081-1087) are currently not
+       * supported, warn the user once if these messages are seen - only warn
+       * once
+       * as these messages can be present in streams that contain 1004 and 1012
+       * so
+       * are valid */
+      send_MSM_warning(&frame[byte], state);
+      break;
+    }
+    default:
+      break;
   }
 }
 
@@ -418,7 +420,6 @@ void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs, msg_obs_t *new_sbp_obs) {
     for (u8 freq = 0; freq < NUM_FREQS; ++freq) {
       const rtcm_freq_data *rtcm_freq = &rtcm_obs->sats[sat].obs[freq];
       if (rtcm_freq->flags.valid_pr == 1 && rtcm_freq->flags.valid_cp == 1) {
-
         packed_obs_content_t *sbp_freq =
             &new_sbp_obs->obs[new_sbp_obs->header.n_obs];
         sbp_freq->flags = 0;
@@ -715,7 +716,6 @@ static const double INSANITY_THRESHOLD = 10.0;
 static void validate_base_obs_sanity(struct rtcm3_sbp_state *state,
                                      gps_time_sec_t *obs_time,
                                      const gps_time_sec_t *rover_time) {
-
   double timediff = gps_diff_time(rover_time, obs_time);
 
   if (timediff >= INSANITY_THRESHOLD && state->cb_base_obs_invalid != NULL) {
@@ -734,12 +734,15 @@ bool no_1230_received(struct rtcm3_sbp_state *state) {
 void send_1029(rtcm_msg_1029 *msg_1029, struct rtcm3_sbp_state *state) {
   uint8_t message[SBP_FRAMING_MAX_PAYLOAD_SIZE] = RTCM_LOG_PREAMBLE;
   uint8_t preamble_size = sizeof(RTCM_LOG_PREAMBLE) - 1;
-  uint8_t max_message_size = SBP_FRAMING_MAX_PAYLOAD_SIZE - sizeof(msg_log_t) - preamble_size;
-  uint8_t message_size = sizeof(msg_log_t) + msg_1029->utf8_code_units_n + preamble_size >
-                         SBP_FRAMING_MAX_PAYLOAD_SIZE ? max_message_size
-                                                      : msg_1029->utf8_code_units_n + preamble_size;
+  uint8_t max_message_size =
+      SBP_FRAMING_MAX_PAYLOAD_SIZE - sizeof(msg_log_t) - preamble_size;
+  uint8_t message_size =
+      sizeof(msg_log_t) + msg_1029->utf8_code_units_n + preamble_size >
+              SBP_FRAMING_MAX_PAYLOAD_SIZE
+          ? max_message_size
+          : msg_1029->utf8_code_units_n + preamble_size;
 
-  memcpy(&message[preamble_size],msg_1029->utf8_code_units,message_size);
+  memcpy(&message[preamble_size], msg_1029->utf8_code_units, message_size);
   /* Check if we've had to truncate the string - we can check for the bit
    * pattern that denotes a 4 byte code unit as it is the super set of all bit
    * patterns (2,3 and 4 byte code units) */
@@ -775,7 +778,6 @@ void send_sbp_log_message(const uint8_t level, const uint8_t *message,
 }
 
 void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state) {
-
   if (!state->sent_msm_warning) {
     // Only send 1 warning
     state->sent_msm_warning = true;
