@@ -173,7 +173,8 @@ void rtcm2sbp_decode_frame(const uint8_t *frame, uint32_t frame_length,
       }
       break;
     }
-    case 1074: {
+    case 1074:
+    case 1075: {
       rtcm_msm_message new_rtcm_msm;
       if (rtcm3_decode_msm(&frame[byte], &new_rtcm_msm) == 0) {
         /* Need to check if we've got obs in the buffer from the previous epoch
@@ -185,7 +186,6 @@ void rtcm2sbp_decode_frame(const uint8_t *frame, uint32_t frame_length,
     case 1071:
     case 1072:
     case 1073:
-    case 1075:
     case 1076:
     case 1077:
     case 1081:
@@ -941,6 +941,19 @@ void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
 
           if (data->flags.valid_lock == 1) {
             sbp_freq->lock = encode_lock_time(data->lock_time_s);
+          }
+
+          if (data->range_rate != 0) { /*TODO add a flag for this?*/
+            sbp_freq->D.i = (s16)floor(data->range_rate);
+            u16 frac_part =
+                (u16)roundl((data->range_rate - (double)sbp_freq->D.i) *
+                            MSG_OBS_DF_MULTIPLIER);
+            if (frac_part == 256) {
+              frac_part = 0;
+              sbp_freq->D.i += 1;
+            }
+            sbp_freq->D.f = (u8)frac_part;
+            sbp_freq->flags |= MSG_OBS_FLAGS_DOPPLER_VALID;
           }
 
           new_sbp_obs->header.n_obs++;

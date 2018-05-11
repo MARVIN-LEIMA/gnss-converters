@@ -19,9 +19,11 @@
 #define MSG_OBS_P_MULTIPLIER ((double)5e1)
 #define MSG_OBS_CN0_MULTIPLIER ((float)4)
 #define MSG_OBS_LF_MULTIPLIER ((double)(1 << 8))
+#define MSG_OBS_DF_MULTIPLIER ((double)(1 << 8))
 #define MSG_OBS_FLAGS_CODE_VALID ((u8)(1 << 0))
 #define MSG_OBS_FLAGS_PHASE_VALID ((u8)(1 << 1))
 #define MSG_OBS_FLAGS_HALF_CYCLE_KNOWN ((u8)(1 << 2))
+#define MSG_OBS_FLAGS_DOPPLER_VALID ((u8)(1 << 3))
 
 #define SBP_FRAMING_MAX_PAYLOAD_SIZE (255u)
 #define RTCM_1029_LOGGING_LEVEL (6u) /* This represents LOG_INFO */
