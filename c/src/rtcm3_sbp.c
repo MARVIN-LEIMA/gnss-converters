@@ -802,18 +802,18 @@ void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state) {
 }
 
 /* return the position of the nth bit that is set in a 64-bit bitfield */
-static u8 get_nth_bit_set(u64 bitfield, u8 n) {
+static u8 get_nth_bit_set(const uint8_t mask_size, const bool mask[mask_size],
+                          const u8 n) {
   u8 ones_found = 0;
   for (u8 pos = 0; pos < 64; pos++) {
     /* check if the first bit is set */
-    if (bitfield & 1) {
+    if (mask[pos]) {
       ones_found++;
       if (ones_found == n) {
         /* this is the nth set bit in the field, return its position */
         return pos;
       }
     }
-    bitfield >>= 1;
   }
   return 0;
 }
@@ -871,32 +871,36 @@ void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
   }
 }
 
-static sbp_gnss_signal_t get_sid_from_msm(u64 satellite_mask,
-                                          u8 satellite_index, u64 signal_mask,
-                                          u64 signal_index) {
+static sbp_gnss_signal_t get_sid_from_msm(
+    const bool satellite_mask[MSM_SATELLITE_MASK_SIZE],
+    const u8 satellite_index, const bool signal_mask[MSM_SIGNAL_MASK_SIZE],
+    const u64 signal_index) {
   /* TODO generalize for other constellations */
 
-  u8 prn = get_nth_bit_set(satellite_mask, satellite_index);
-  u8 code_index = get_nth_bit_set(signal_mask, signal_index);
+  u8 prn =
+      get_nth_bit_set(MSM_SATELLITE_MASK_SIZE, satellite_mask, satellite_index);
+  u8 code_index =
+      get_nth_bit_set(MSM_SIGNAL_MASK_SIZE, signal_mask, signal_index);
   code_t code;
   if (code_index == 1) {
     code = CODE_GPS_L1CA;
   } else {
     code = CODE_GPS_L2CM;
   }
-  sbp_gnss_signal_t sid = {code, prn};
+  sbp_gnss_signal_t sid = {prn, code};
   return sid;
 }
 
 void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
-  uint8_t num_sats = count_bits_u64(msg->header.satellite_mask, 1);
-  uint8_t num_sigs = count_bits_u32(msg->header.signal_mask, 1);
+  uint8_t num_sats =
+      count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg->header.satellite_mask);
+  uint8_t num_sigs =
+      count_mask_bits(MSM_SIGNAL_MASK_SIZE, msg->header.signal_mask);
 
   u8 cell_index = 0;
   for (u8 sat = 0; sat < num_sats; sat++) {
     for (u8 sig = 0; sig < num_sigs; sig++) {
-      uint64_t index = (uint64_t)1 << (sat * num_sigs + sig);
-      if (msg->header.cell_mask & index) {
+      if (msg->header.cell_mask[sat * num_sigs + sig]) {
         const rtcm_msm_signal_data *data = &msg->signals[cell_index];
         if (data->flags.valid_pr == 1 && data->flags.valid_cp == 1) {
           packed_obs_content_t *sbp_freq =
