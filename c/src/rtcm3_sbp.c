@@ -811,7 +811,7 @@ static u8 get_nth_bit_set(const uint8_t mask_size, const bool mask[mask_size],
       ones_found++;
       if (ones_found == n) {
         /* this is the nth set bit in the field, return its position */
-        return pos;
+        return pos + 1;
       }
     }
   }
@@ -918,13 +918,14 @@ void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
                                            msg->header.signal_mask, sig);
 
           if (data->flags.valid_pr == 1) {
-            sbp_freq->P = (u32)roundl(data->pseudorange * MSG_OBS_P_MULTIPLIER);
+            sbp_freq->P =
+                (u32)roundl(data->pseudorange_m * MSG_OBS_P_MULTIPLIER);
             sbp_freq->flags |= MSG_OBS_FLAGS_CODE_VALID;
           }
           if (data->flags.valid_cp == 1) {
-            sbp_freq->L.i = (s32)floor(data->carrier_phase);
+            sbp_freq->L.i = (s32)floor(data->carrier_phase_cyc);
             u16 frac_part =
-                (u16)roundl((data->carrier_phase - (double)sbp_freq->L.i) *
+                (u16)roundl((data->carrier_phase_cyc - (double)sbp_freq->L.i) *
                             MSG_OBS_LF_MULTIPLIER);
             if (frac_part == 256) {
               frac_part = 0;
@@ -947,10 +948,10 @@ void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
             sbp_freq->lock = encode_lock_time(data->lock_time_s);
           }
 
-          if (data->range_rate != 0) { /*TODO add a flag for this?*/
-            sbp_freq->D.i = (s16)floor(data->range_rate);
+          if (data->range_rate_Hz != 0) { /*TODO add a flag for this?*/
+            sbp_freq->D.i = (s16)floor(data->range_rate_Hz);
             u16 frac_part =
-                (u16)roundl((data->range_rate - (double)sbp_freq->D.i) *
+                (u16)roundl((data->range_rate_Hz - (double)sbp_freq->D.i) *
                             MSG_OBS_DF_MULTIPLIER);
             if (frac_part == 256) {
               frac_part = 0;
