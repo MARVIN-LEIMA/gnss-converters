@@ -808,11 +808,11 @@ static u8 get_nth_bit_set(const uint8_t mask_size, const bool mask[mask_size],
   for (u8 pos = 0; pos < 64; pos++) {
     /* check if the first bit is set */
     if (mask[pos]) {
-      ones_found++;
       if (ones_found == n) {
         /* this is the nth set bit in the field, return its position */
-        return pos + 1;
+        return pos;
       }
+      ones_found++;
     }
   }
   return 0;
@@ -887,7 +887,7 @@ static sbp_gnss_signal_t get_sid_from_msm(
   } else {
     code = CODE_GPS_L2CM;
   }
-  sbp_gnss_signal_t sid = {prn, code};
+  sbp_gnss_signal_t sid = {prn + 1, code};
   return sid;
 }
 
@@ -923,9 +923,11 @@ void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
             sbp_freq->flags |= MSG_OBS_FLAGS_CODE_VALID;
           }
           if (data->flags.valid_cp == 1) {
-            sbp_freq->L.i = (s32)floor(data->carrier_phase_cyc);
+            /* CP sign flip */
+            double carrier_phase_cyc = -data->carrier_phase_cyc;
+            sbp_freq->L.i = (s32)floor(carrier_phase_cyc);
             u16 frac_part =
-                (u16)roundl((data->carrier_phase_cyc - (double)sbp_freq->L.i) *
+                (u16)roundl((carrier_phase_cyc - (double)sbp_freq->L.i) *
                             MSG_OBS_LF_MULTIPLIER);
             if (frac_part == 256) {
               frac_part = 0;
@@ -933,7 +935,7 @@ void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
             }
             sbp_freq->L.f = (u8)frac_part;
             sbp_freq->flags |= MSG_OBS_FLAGS_PHASE_VALID;
-            if (data->hca_indicator) {
+            if (!data->hca_indicator) {
               sbp_freq->flags |= MSG_OBS_FLAGS_HALF_CYCLE_KNOWN;
             }
           }
