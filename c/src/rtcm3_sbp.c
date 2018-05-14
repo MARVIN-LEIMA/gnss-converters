@@ -923,11 +923,9 @@ void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
             sbp_freq->flags |= MSG_OBS_FLAGS_CODE_VALID;
           }
           if (data->flags.valid_cp == 1) {
-            /* CP sign flip */
-            double carrier_phase_cyc = -data->carrier_phase_cyc;
-            sbp_freq->L.i = (s32)floor(carrier_phase_cyc);
+            sbp_freq->L.i = (s32)floor(data->carrier_phase_cyc);
             u16 frac_part =
-                (u16)roundl((carrier_phase_cyc - (double)sbp_freq->L.i) *
+                (u16)roundl((data->carrier_phase_cyc - (double)sbp_freq->L.i) *
                             MSG_OBS_LF_MULTIPLIER);
             if (frac_part == 256) {
               frac_part = 0;
@@ -951,10 +949,11 @@ void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
           }
 
           if (data->range_rate_Hz != 0) { /*TODO add a flag for this?*/
-            sbp_freq->D.i = (s16)floor(data->range_rate_Hz);
-            u16 frac_part =
-                (u16)roundl((data->range_rate_Hz - (double)sbp_freq->D.i) *
-                            MSG_OBS_DF_MULTIPLIER);
+            /* flip Doppler sign to Piksi sign convention */
+            double doppler_Hz = -data->range_rate_Hz;
+            sbp_freq->D.i = (s16)floor(doppler_Hz);
+            u16 frac_part = (u16)roundl((doppler_Hz - (double)sbp_freq->D.i) *
+                                        MSG_OBS_DF_MULTIPLIER);
             if (frac_part == 256) {
               frac_part = 0;
               sbp_freq->D.i += 1;
