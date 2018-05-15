@@ -19,9 +19,11 @@
 #define MSG_OBS_P_MULTIPLIER ((double)5e1)
 #define MSG_OBS_CN0_MULTIPLIER ((float)4)
 #define MSG_OBS_LF_MULTIPLIER ((double)(1 << 8))
+#define MSG_OBS_DF_MULTIPLIER ((double)(1 << 8))
 #define MSG_OBS_FLAGS_CODE_VALID ((u8)(1 << 0))
 #define MSG_OBS_FLAGS_PHASE_VALID ((u8)(1 << 1))
 #define MSG_OBS_FLAGS_HALF_CYCLE_KNOWN ((u8)(1 << 2))
+#define MSG_OBS_FLAGS_DOPPLER_VALID ((u8)(1 << 3))
 
 #define SBP_FRAMING_MAX_PAYLOAD_SIZE (255u)
 #define RTCM_1029_LOGGING_LEVEL (6u) /* This represents LOG_INFO */
@@ -33,17 +35,43 @@
 extern bool rtcm3_debug;
 
 /** Code identifier. */
-typedef enum code {
+typedef enum code_e {
   CODE_INVALID = -1,
   CODE_GPS_L1CA = 0,
   CODE_GPS_L2CM = 1,
   CODE_SBAS_L1CA = 2,
-  CODE_GLO_L1CA = 3,
-  CODE_GLO_L2CA = 4,
+  CODE_GLO_L1OF = 3,
+  CODE_GLO_L2OF = 4,
   CODE_GPS_L1P = 5,
   CODE_GPS_L2P = 6,
   CODE_GPS_L2CL = 7,
-  CODE_COUNT,
+  CODE_GPS_L2CX = 8, /* combined L2C tracking */
+  CODE_GPS_L5I = 9,
+  CODE_GPS_L5Q = 10,
+  CODE_GPS_L5X = 11,  /* combined L5 tracking */
+  CODE_BDS2_B11 = 12, /* data channel at 1526 * 1.023 MHz */
+  CODE_BDS2_B2 = 13,  /* data channel at 1180 * 1.023 MHz */
+  CODE_GAL_E1B = 14,  /* data channel at E1 (1540 * 1.023 MHz) */
+  CODE_GAL_E1C = 15,  /* pilot channel at E1 */
+  CODE_GAL_E1X = 16,  /* combined tracking on E1 */
+  CODE_GAL_E6B = 17,
+  CODE_GAL_E6C = 18,
+  CODE_GAL_E6X = 19, /* combined tracking on E6 */
+  CODE_GAL_E7I = 20,
+  CODE_GAL_E7Q = 21,
+  CODE_GAL_E7X = 22, /* combined tracking on E5b */
+  CODE_GAL_E8 = 23,  /* E5 AltBOC tracking */
+  CODE_GAL_E5I = 24,
+  CODE_GAL_E5Q = 25,
+  CODE_GAL_E5X = 26, /* combined tracking on E5a */
+  CODE_QZS_L1CA = 27,
+  CODE_QZS_L2CM = 28,
+  CODE_QZS_L2CL = 29,
+  CODE_QZS_L2CX = 30,
+  CODE_QZS_L5I = 31,
+  CODE_QZS_L5Q = 32,
+  CODE_QZS_L5X = 33,
+  CODE_COUNT
 } code_t;
 
 /** Number of milliseconds in a second. */
@@ -168,5 +196,10 @@ void send_sbp_log_message(const uint8_t level,
                           struct rtcm3_sbp_state *state);
 
 void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state);
+
+void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
+                           struct rtcm3_sbp_state *state);
+
+void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs);
 
 #endif /* GNSS_CONVERTERS_RTCM3_SBP_H */

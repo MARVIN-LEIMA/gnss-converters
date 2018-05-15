@@ -11,6 +11,7 @@
  */
 
 #include <assert.h>
+#include <bits.h>
 #include <math.h>
 #include <rtcm3_decode.h>
 #include <string.h>
@@ -85,7 +86,7 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
       break;
     case 1002: {
       rtcm_obs_message new_rtcm_obs;
-      if (rtcm3_decode_1002(&frame[byte], &new_rtcm_obs) == 0) {
+      if (rtcm3_decode_1002(&frame[byte], &new_rtcm_obs) == RC_OK) {
         /* Need to check if we've got obs in the buffer from the previous epoch
          and send before accepting the new message */
         add_gps_obs_to_buffer(&new_rtcm_obs, state);
@@ -94,7 +95,7 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
     }
     case 1004: {
       rtcm_obs_message new_rtcm_obs;
-      if (rtcm3_decode_1004(&frame[byte], &new_rtcm_obs) == 0) {
+      if (rtcm3_decode_1004(&frame[byte], &new_rtcm_obs) == RC_OK) {
         /* Need to check if we've got obs in the buffer from the previous epoch
          and send before accepting the new message */
         add_gps_obs_to_buffer(&new_rtcm_obs, state);
@@ -130,7 +131,7 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
       break;
     case 1010: {
       rtcm_obs_message new_rtcm_obs;
-      if (rtcm3_decode_1010(&frame[byte], &new_rtcm_obs) == 0 &&
+      if (rtcm3_decode_1010(&frame[byte], &new_rtcm_obs) == RC_OK &&
           state->leap_second_known) {
         add_glo_obs_to_buffer(&new_rtcm_obs, state);
       }
@@ -138,7 +139,7 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
     }
     case 1012: {
       rtcm_obs_message new_rtcm_obs;
-      if (rtcm3_decode_1012(&frame[byte], &new_rtcm_obs) == 0 &&
+      if (rtcm3_decode_1012(&frame[byte], &new_rtcm_obs) == RC_OK &&
           state->leap_second_known) {
         add_glo_obs_to_buffer(&new_rtcm_obs, state);
       }
@@ -146,14 +147,14 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
     }
     case 1029: {
       rtcm_msg_1029 msg_1029;
-      if (rtcm3_decode_1029(&frame[byte], &msg_1029) == 0) {
+      if (rtcm3_decode_1029(&frame[byte], &msg_1029) == RC_OK) {
         send_1029(&msg_1029, state);
       }
       break;
     }
     case 1033: {
       rtcm_msg_1033 msg_1033;
-      if (rtcm3_decode_1033(&frame[byte], &msg_1033) == 0 &&
+      if (rtcm3_decode_1033(&frame[byte], &msg_1033) == RC_OK &&
           no_1230_received(state)) {
         msg_glo_biases_t sbp_glo_cpb;
         rtcm3_1033_to_sbp(&msg_1033, &sbp_glo_cpb);
@@ -166,7 +167,7 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
     }
     case 1230: {
       rtcm_msg_1230 msg_1230;
-      if (rtcm3_decode_1230(&frame[byte], &msg_1230) == 0) {
+      if (rtcm3_decode_1230(&frame[byte], &msg_1230) == RC_OK) {
         msg_glo_biases_t sbp_glo_cpb;
         rtcm3_1230_to_sbp(&msg_1230, &sbp_glo_cpb);
         state->cb_rtcm_to_sbp(SBP_MSG_GLO_BIASES,
@@ -177,26 +178,76 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
       }
       break;
     }
+    case 1074: {
+      rtcm_msm_message new_rtcm_msm;
+      if (rtcm3_decode_msm4(&frame[byte], &new_rtcm_msm) == RC_OK) {
+        add_msm_obs_to_buffer(&new_rtcm_msm, state);
+      }
+      break;
+    }
+    case 1075: {
+      rtcm_msm_message new_rtcm_msm;
+      if (rtcm3_decode_msm5(&frame[byte], &new_rtcm_msm) == RC_OK) {
+        add_msm_obs_to_buffer(&new_rtcm_msm, state);
+      }
+      break;
+    }
+    case 1076: {
+      rtcm_msm_message new_rtcm_msm;
+      if (rtcm3_decode_msm6(&frame[byte], &new_rtcm_msm) == RC_OK) {
+        add_msm_obs_to_buffer(&new_rtcm_msm, state);
+      }
+      break;
+    }
+    case 1077: {
+      rtcm_msm_message new_rtcm_msm;
+      if (rtcm3_decode_msm7(&frame[byte], &new_rtcm_msm) == RC_OK) {
+        add_msm_obs_to_buffer(&new_rtcm_msm, state);
+      }
+      break;
+    }
     case 1071:
     case 1072:
     case 1073:
-    case 1074:
-    case 1075:
-    case 1076:
-    case 1077:
     case 1081:
     case 1082:
     case 1083:
     case 1084:
     case 1085:
     case 1086:
-    case 1087: {
-      /* MSM messages for GPS (1071-1077) and GLO (1081-1087) are currently not
-       * supported, warn the user once if these messages are seen - only warn
-       * once
-       * as these messages can be present in streams that contain 1004 and 1012
-       * so
-       * are valid */
+    case 1087:
+    case 1091:
+    case 1092:
+    case 1093:
+    case 1094:
+    case 1095:
+    case 1096:
+    case 1097:
+    case 1101:
+    case 1102:
+    case 1103:
+    case 1104:
+    case 1105:
+    case 1106:
+    case 1107:
+    case 1111:
+    case 1112:
+    case 1113:
+    case 1114:
+    case 1115:
+    case 1116:
+    case 1117:
+    case 1121:
+    case 1122:
+    case 1123:
+    case 1124:
+    case 1125:
+    case 1126:
+    case 1127: {
+      /* MSM1-3 messages (1xx3) or constellations other than GPS (1081-) are
+       * currently not supported, warn the user once if these messages are seen
+       * - only warn once as these messages can be present in streams that
+       * contain 1004 and 1012 so are valid */
       send_MSM_warning(&frame[byte], state);
       break;
     }
@@ -417,10 +468,10 @@ code_t get_glo_sbp_code(u8 freq, u8 rtcm_code) {
   (void)rtcm_code;
   code_t code = CODE_INVALID;
   if (freq == L1_FREQ) {
-    code = CODE_GLO_L1CA;
+    code = CODE_GLO_L1OF;
     /* CODE_GLO_L1P currently not supported in sbp */
   } else if (freq == L2_FREQ) {
-    code = CODE_GLO_L2CA;
+    code = CODE_GLO_L2OF;
     /* CODE_GLO_L2P currently not supported in sbp */
   }
   return code;
@@ -804,8 +855,211 @@ void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state) {
     for (uint32_t i = 12; i < 24; i++) {
       stn_id = (stn_id << 1) + ((frame[i / 8] >> (7 - i % 8)) & 1u);
     }
-    uint8_t msg[37] = "MSM Messages currently not supported";
+    uint8_t msg[39] = "MSM1-3 Messages currently not supported";
     send_sbp_log_message(
         RTCM_MSM_LOGGING_LEVEL, msg, sizeof(msg), stn_id, state);
+  }
+}
+
+/* return the position of the nth bit that is set in a 64-bit bitfield */
+static u8 get_nth_bit_set(const uint8_t mask_size,
+                          const bool mask[mask_size],
+                          const u8 n) {
+  u8 ones_found = 0;
+  for (u8 pos = 0; pos < 64; pos++) {
+    /* check if the first bit is set */
+    if (mask[pos]) {
+      if (ones_found == n) {
+        /* this is the nth set bit in the field, return its position */
+        return pos;
+      }
+      ones_found++;
+    }
+  }
+  return 0;
+}
+
+void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
+                           struct rtcm3_sbp_state *state) {
+  gps_time_sec_t obs_time;
+  compute_gps_time(new_rtcm_obs->header.tow_ms,
+                   &obs_time,
+                   &state->time_from_rover_obs,
+                   state);
+
+  if (state->last_gps_time.wn == INVALID_TIME ||
+      gps_diff_time(&obs_time, &state->last_gps_time) > 0.0) {
+    state->last_gps_time.wn = obs_time.wn;
+    state->last_gps_time.tow = obs_time.tow;
+
+    /* Transform the newly received obs to sbp */
+    u8 new_obs[sizeof(observation_header_t) +
+               MAX_OBS_PER_EPOCH * sizeof(packed_obs_content_t)];
+    msg_obs_t *new_sbp_obs = (msg_obs_t *)(new_obs);
+    memset((void *)new_sbp_obs, 0, sizeof(*new_sbp_obs));
+
+    /* Find the buffer of obs to be sent */
+    msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
+
+    new_sbp_obs->header.t.wn = obs_time.wn;
+    new_sbp_obs->header.t.tow = obs_time.tow * S_TO_MS;
+    new_sbp_obs->header.t.ns_residual = 0;
+
+    rtcm3_msm_to_sbp(new_rtcm_obs, new_sbp_obs);
+
+    /* Check if the buffer already has obs of the same time */
+    if (sbp_obs_buffer->header.n_obs != 0 &&
+        (sbp_obs_buffer->header.t.tow != new_sbp_obs->header.t.tow ||
+         state->sender_id !=
+             rtcm_2_sbp_sender_id(new_rtcm_obs->header.stn_id))) {
+      /* We either have missed a message, or we have a new station. Either way,
+       send through the current buffer and clear before adding new obs */
+      send_observations(state);
+    }
+
+    /* Copy new obs into buffer */
+    u8 obs_index_buffer = sbp_obs_buffer->header.n_obs;
+    state->sender_id = rtcm_2_sbp_sender_id(new_rtcm_obs->header.stn_id);
+    for (u8 obs_count = 0; obs_count < new_sbp_obs->header.n_obs; obs_count++) {
+      sbp_obs_buffer->obs[obs_index_buffer] = new_sbp_obs->obs[obs_count];
+      obs_index_buffer++;
+    }
+    sbp_obs_buffer->header.n_obs = obs_index_buffer;
+    sbp_obs_buffer->header.t = new_sbp_obs->header.t;
+
+    /* If we aren't expecting another message, send the buffer */
+    if (new_rtcm_obs->header.multiple == 0) {
+      send_observations(state);
+    }
+  }
+}
+
+static code_t get_msm_gps_code(uint8_t signal_id) {
+  /* RTCM 10403.3 Table 3.5-91 */
+  switch (signal_id) {
+    case 2:
+      return CODE_GPS_L1CA;
+    case 3:
+      return CODE_GPS_L1P;
+    case 9:
+      return CODE_GPS_L2P;
+    case 15:
+      return CODE_GPS_L2CM;
+    case 16:
+      return CODE_GPS_L2CL;
+    case 17:
+      return CODE_GPS_L2CX;
+    case 22:
+      return CODE_GPS_L5I;
+    case 23:
+      return CODE_GPS_L5Q;
+    case 24:
+      return CODE_GPS_L5X;
+
+    default:
+      /* other GPS codes not supported */
+      return CODE_INVALID;
+  }
+}
+
+/* return true if conversion to SID succeeded, and the SID as a pointer */
+static bool get_sid_from_msm(const u8 satellite_index,
+                             const u64 signal_index,
+                             const rtcm_msm_header *header,
+                             sbp_gnss_signal_t *sid) {
+  /* TODO generalize for other constellations */
+
+  u8 prn = get_nth_bit_set(
+      MSM_SATELLITE_MASK_SIZE, header->satellite_mask, satellite_index);
+  u8 code_index =
+      get_nth_bit_set(MSM_SIGNAL_MASK_SIZE, header->signal_mask, signal_index);
+  code_t code = get_msm_gps_code(code_index + 1);
+
+  if (CODE_INVALID != code) {
+    sid->sat = prn + 1;
+    sid->code = code;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
+  uint8_t num_sats =
+      count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg->header.satellite_mask);
+  uint8_t num_sigs =
+      count_mask_bits(MSM_SIGNAL_MASK_SIZE, msg->header.signal_mask);
+
+  u8 cell_index = 0;
+  for (u8 sat = 0; sat < num_sats; sat++) {
+    for (u8 sig = 0; sig < num_sigs; sig++) {
+      if (msg->header.cell_mask[sat * num_sigs + sig]) {
+        sbp_gnss_signal_t sid;
+        const rtcm_msm_signal_data *data = &msg->signals[cell_index];
+        if (get_sid_from_msm(sat, sig, &msg->header, &sid) &&
+            data->flags.valid_pr == 1 && data->flags.valid_cp == 1) {
+          packed_obs_content_t *sbp_freq =
+              &new_sbp_obs->obs[new_sbp_obs->header.n_obs];
+          sbp_freq->flags = 0;
+          sbp_freq->P = 0.0;
+          sbp_freq->L.i = 0;
+          sbp_freq->L.f = 0.0;
+          sbp_freq->D.i = 0;
+          sbp_freq->D.f = 0.0;
+          sbp_freq->cn0 = 0.0;
+          sbp_freq->lock = 0.0;
+
+          sbp_freq->sid = sid;
+
+          if (data->flags.valid_pr == 1) {
+            sbp_freq->P =
+                (u32)roundl(data->pseudorange_m * MSG_OBS_P_MULTIPLIER);
+            sbp_freq->flags |= MSG_OBS_FLAGS_CODE_VALID;
+          }
+          if (data->flags.valid_cp == 1) {
+            sbp_freq->L.i = (s32)floor(data->carrier_phase_cyc);
+            u16 frac_part =
+                (u16)roundl((data->carrier_phase_cyc - (double)sbp_freq->L.i) *
+                            MSG_OBS_LF_MULTIPLIER);
+            if (frac_part == 256) {
+              frac_part = 0;
+              sbp_freq->L.i += 1;
+            }
+            sbp_freq->L.f = (u8)frac_part;
+            sbp_freq->flags |= MSG_OBS_FLAGS_PHASE_VALID;
+            if (!data->hca_indicator) {
+              sbp_freq->flags |= MSG_OBS_FLAGS_HALF_CYCLE_KNOWN;
+            }
+          }
+
+          if (data->flags.valid_cnr == 1) {
+            sbp_freq->cn0 = (u8)roundl(data->cnr * MSG_OBS_CN0_MULTIPLIER);
+          } else {
+            sbp_freq->cn0 = 0;
+          }
+
+          if (data->flags.valid_lock == 1) {
+            sbp_freq->lock = encode_lock_time(data->lock_time_s);
+          }
+
+          if (data->flags.valid_dop == 1) {
+            /* flip Doppler sign to Piksi sign convention */
+            double doppler_Hz = -data->range_rate_Hz;
+            sbp_freq->D.i = (s16)floor(doppler_Hz);
+            u16 frac_part = (u16)roundl((doppler_Hz - (double)sbp_freq->D.i) *
+                                        MSG_OBS_DF_MULTIPLIER);
+            if (frac_part == 256) {
+              frac_part = 0;
+              sbp_freq->D.i += 1;
+            }
+            sbp_freq->D.f = (u8)frac_part;
+            sbp_freq->flags |= MSG_OBS_FLAGS_DOPPLER_VALID;
+          }
+
+          new_sbp_obs->header.n_obs++;
+        }
+        cell_index++;
+      }
+    }
   }
 }
