@@ -18,6 +18,8 @@
 #include <string.h>
 #include "rtcm3_sbp_internal.h"
 
+#include <stdio.h>
+
 static void validate_base_obs_sanity(struct rtcm3_sbp_state *state,
                                      gps_time_sec_t *obs_time,
                                      const gps_time_sec_t *rover_time);
@@ -45,6 +47,7 @@ void rtcm2sbp_init(
   state->last_1230_received.tow = 0;
 
   state->sent_msm_warning = false;
+  state->using_msm = false;
 
   const msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
   memset((void *)sbp_obs_buffer, 0, sizeof(*sbp_obs_buffer));
@@ -258,6 +261,11 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
 
 void add_glo_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
                            struct rtcm3_sbp_state *state) {
+  if (state->using_msm) {
+    /* Using MSM, ignore legacy observation messages */
+    return;
+  }
+
   gps_time_sec_t obs_time;
   compute_glo_time(new_rtcm_obs->header.tow_ms,
                    &obs_time,
@@ -274,6 +282,11 @@ void add_glo_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
 
 void add_gps_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
                            struct rtcm3_sbp_state *state) {
+  if (state->using_msm) {
+    /* Using MSM, ignore legacy observation messages */
+    return;
+  }
+
   gps_time_sec_t obs_time;
   compute_gps_time(new_rtcm_obs->header.tow_ms,
                    &obs_time,
@@ -863,6 +876,8 @@ void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state) {
 
 void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
                            struct rtcm3_sbp_state *state) {
+  state->using_msm = true;
+
   gps_time_sec_t obs_time;
   compute_gps_time(new_rtcm_obs->header.tow_ms,
                    &obs_time,

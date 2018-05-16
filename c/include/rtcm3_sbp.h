@@ -35,6 +35,7 @@ struct rtcm3_sbp_state {
   u8 obs_buffer[sizeof(observation_header_t) +
                 MAX_OBS_PER_EPOCH * sizeof(packed_obs_content_t)];
   bool sent_msm_warning;
+  bool using_msm;
 };
 
 void rtcm2sbp_decode_frame(const uint8_t *frame,
