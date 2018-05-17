@@ -25,10 +25,9 @@
 #define MSG_OBS_FLAGS_HALF_CYCLE_KNOWN ((u8)(1 << 2))
 #define MSG_OBS_FLAGS_DOPPLER_VALID ((u8)(1 << 3))
 
-#define SBP_FRAMING_MAX_PAYLOAD_SIZE (255u)
 #define RTCM_1029_LOGGING_LEVEL (6u) /* This represents LOG_INFO */
 #define RTCM_MSM_LOGGING_LEVEL (4u)  /* This represents LOG_WARN */
-#define RTCM_BUFF_FULL_LOGGING_LEVEL (3u)  /* This represents LOG_ERROR */
+#define RTCM_BUFFER_FULL_LOGGING_LEVEL (3u)  /* This represents LOG_ERROR */
 
 #define MS_TO_S 1e-3
 #define S_TO_MS 1e3
@@ -158,6 +157,8 @@ void send_sbp_log_message(const uint8_t level,
                           struct rtcm3_sbp_state *state);
 
 void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state);
+
+void send_buffer_full_error(struct rtcm3_sbp_state *state);
 
 void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
                            struct rtcm3_sbp_state *state);
