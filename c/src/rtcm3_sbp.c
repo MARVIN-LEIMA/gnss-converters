@@ -878,11 +878,25 @@ void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
                            struct rtcm3_sbp_state *state) {
   state->using_msm = true;
 
+  constellation_t cons = to_constellation(new_rtcm_obs->header.msg_num);
+
   gps_time_sec_t obs_time;
-  compute_gps_time(new_rtcm_obs->header.tow_ms,
-                   &obs_time,
-                   &state->time_from_rover_obs,
-                   state);
+  if (CONSTELLATION_GLO == cons) {
+    compute_glo_time(new_rtcm_obs->header.tow_ms,
+                     &obs_time,
+                     &state->time_from_rover_obs,
+                     state->leap_seconds);
+
+  } else {
+    double tow_ms = new_rtcm_obs->header.tow_ms;
+
+    if (CONSTELLATION_BDS2 == cons) {
+      /* BDS system time has a constant offset */
+      tow_ms += BDS_SECOND_TO_GPS_SECOND * SECS_MS;
+    }
+
+    compute_gps_time(tow_ms, &obs_time, &state->time_from_rover_obs, state);
+  }
 
   if (state->last_gps_time.wn == INVALID_TIME ||
       gps_diff_time(&obs_time, &state->last_gps_time) >= 0.0) {

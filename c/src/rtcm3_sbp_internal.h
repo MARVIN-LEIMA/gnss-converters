@@ -40,6 +40,9 @@ extern bool rtcm3_debug;
 #define SEC_IN_WEEK 604800
 #define SEC_IN_HOUR 3600
 
+/** Constant difference of Beidou time from GPS time */
+#define BDS_SECOND_TO_GPS_SECOND 14
+
 /* PREAMBLE to append to an RTCM3 log message */
 #define RTCM_LOG_PREAMBLE "RTCM: "
 
