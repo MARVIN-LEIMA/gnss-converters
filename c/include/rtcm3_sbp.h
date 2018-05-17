@@ -17,8 +17,17 @@
 #include <libsbp/logging.h>
 #include <libsbp/observation.h>
 
-/* FIXME: this assumes max 32 GPS and 24 GLO sats */
-#define MAX_OBS_PER_EPOCH 56
+/* This is the maximum number of SBP observations possible per epoch:
+   - Max number of observation messages comes from the 4 bits assigned to the
+     sequence count in header.n_obs
+   - The number of observations per message comes from the max 255 byte
+     message length
+*/
+#define SBP_FRAMING_MAX_PAYLOAD_SIZE (255u)
+#define SBP_HDR_SIZE (sizeof(observation_header_t))
+#define SBP_OBS_SIZE (sizeof(packed_obs_content_t))
+#define SBP_MAX_OBS_SEQ (16u)
+#define MAX_OBS_PER_EPOCH (SBP_MAX_OBS_SEQ * (SBP_FRAMING_MAX_PAYLOAD_SIZE - SBP_HDR_SIZE) / SBP_OBS_SIZE)
 
 /* MAX valid value (ms) for GPS is 604799999 and GLO is 86401999 */
 #define INVALID_TIME 0xFFFF
