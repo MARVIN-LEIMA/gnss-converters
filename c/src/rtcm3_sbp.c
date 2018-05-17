@@ -353,16 +353,13 @@ void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
 void send_observations(struct rtcm3_sbp_state *state) {
   const msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
 
-  /* Work out how many sbp messages we need to split this into */
-  const uint32_t header_size = sizeof(observation_header_t);
-  const uint32_t obs_size = sizeof(packed_obs_content_t);
-  const uint32_t max_obs_in_sbp =
-      ((SBP_FRAMING_MAX_PAYLOAD_SIZE - header_size) / obs_size);
-
   /* We want the ceiling of n_obs divided by max obs in a single message to get
    * total number of messages needed */
   const u8 total_messages =
-      1 + ((sbp_obs_buffer->header.n_obs - 1) / max_obs_in_sbp);
+      1 + ((sbp_obs_buffer->header.n_obs - 1) / MAX_OBS_IN_SBP);
+
+  assert(sbp_obs_buffer->header.n_obs > 0);
+  assert(total_messages <= SBP_MAX_OBS_SEQ);
 
   u8 obs_count = 0;
   u8 obs_data[SBP_FRAMING_MAX_PAYLOAD_SIZE];
@@ -372,7 +369,7 @@ void send_observations(struct rtcm3_sbp_state *state) {
     memset(obs_data, 0, SBP_FRAMING_MAX_PAYLOAD_SIZE);
 
     u8 obs_index = 0;
-    while (obs_index < max_obs_in_sbp &&
+    while (obs_index < MAX_OBS_IN_SBP &&
            obs_count < sbp_obs_buffer->header.n_obs) {
       sbp_obs->obs[obs_index++] = sbp_obs_buffer->obs[obs_count++];
     }
@@ -380,10 +377,10 @@ void send_observations(struct rtcm3_sbp_state *state) {
     sbp_obs->header.t = sbp_obs_buffer->header.t;
     sbp_obs->header.n_obs = (total_messages << 4) + msg_num;
 
-    state->cb_rtcm_to_sbp(SBP_MSG_OBS,
-                          header_size + obs_index * obs_size,
-                          (u8 *)sbp_obs,
-                          state->sender_id);
+    u16 len = SBP_HDR_SIZE + obs_index * SBP_OBS_SIZE;
+    assert(len <= SBP_FRAMING_MAX_PAYLOAD_SIZE);
+
+    state->cb_rtcm_to_sbp(SBP_MSG_OBS, len, obs_data, state->sender_id);
   }
   memset((void *)sbp_obs_buffer, 0, sizeof(*sbp_obs_buffer));
 }
