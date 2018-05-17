@@ -26,7 +26,7 @@
 #define SBP_FRAMING_MAX_PAYLOAD_SIZE (255u)
 #define SBP_HDR_SIZE (sizeof(observation_header_t))
 #define SBP_OBS_SIZE (sizeof(packed_obs_content_t))
-#define SBP_MAX_OBS_SEQ (16u)
+#define SBP_MAX_OBS_SEQ (15u)
 #define MAX_OBS_IN_SBP \
   ((SBP_FRAMING_MAX_PAYLOAD_SIZE - SBP_HDR_SIZE) / SBP_OBS_SIZE)
 #define MAX_OBS_PER_EPOCH (SBP_MAX_OBS_SEQ * MAX_OBS_IN_SBP)
