@@ -18,8 +18,6 @@
 #include <string.h>
 #include "rtcm3_sbp_internal.h"
 
-#include <stdio.h>
-
 static void validate_base_obs_sanity(struct rtcm3_sbp_state *state,
                                      gps_time_sec_t *obs_time,
                                      const gps_time_sec_t *rover_time);
@@ -495,7 +493,8 @@ code_t get_glo_sbp_code(u8 freq, u8 rtcm_code) {
   return code;
 }
 
-void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs, msg_obs_t *new_sbp_obs,
+void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs,
+                  msg_obs_t *new_sbp_obs,
                   struct rtcm3_sbp_state *state) {
   for (u8 sat = 0; sat < rtcm_obs->header.n_sat; ++sat) {
     for (u8 freq = 0; freq < NUM_FREQS; ++freq) {
@@ -983,7 +982,8 @@ static bool get_sid_from_msm(const rtcm_msm_header *header,
   }
 }
 
-void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs,
+void rtcm3_msm_to_sbp(const rtcm_msm_message *msg,
+                      msg_obs_t *new_sbp_obs,
                       struct rtcm3_sbp_state *state) {
   uint8_t num_sats =
       count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg->header.satellite_mask);
