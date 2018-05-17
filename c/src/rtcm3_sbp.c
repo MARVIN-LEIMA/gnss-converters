@@ -317,7 +317,7 @@ void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
   new_sbp_obs->header.t.tow = obs_time->tow * S_TO_MS;
   new_sbp_obs->header.t.ns_residual = 0;
 
-  rtcm3_to_sbp(new_rtcm_obs, new_sbp_obs);
+  rtcm3_to_sbp(new_rtcm_obs, new_sbp_obs, state);
 
   /* Check if the buffer already has obs of the same time */
   if (sbp_obs_buffer->header.n_obs != 0 &&
@@ -490,11 +490,20 @@ code_t get_glo_sbp_code(u8 freq, u8 rtcm_code) {
   return code;
 }
 
-void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs, msg_obs_t *new_sbp_obs) {
+void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs, msg_obs_t *new_sbp_obs,
+                  struct rtcm3_sbp_state *state) {
   for (u8 sat = 0; sat < rtcm_obs->header.n_sat; ++sat) {
     for (u8 freq = 0; freq < NUM_FREQS; ++freq) {
       const rtcm_freq_data *rtcm_freq = &rtcm_obs->sats[sat].obs[freq];
       if (rtcm_freq->flags.valid_pr == 1 && rtcm_freq->flags.valid_cp == 1) {
+        if (new_sbp_obs->header.n_obs >= MAX_OBS_PER_EPOCH) {
+          /* TODO: Get the stn ID as well */
+          uint8_t log_msg[] = "Too many RTCM observations received!";
+          send_sbp_log_message(
+              RTCM_BUFF_FULL_LOGGING_LEVEL, log_msg, sizeof(log_msg), 0, state);
+          return;
+        }
+
         packed_obs_content_t *sbp_freq =
             &new_sbp_obs->obs[new_sbp_obs->header.n_obs];
         sbp_freq->flags = 0;
@@ -916,7 +925,7 @@ void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
     new_sbp_obs->header.t.tow = obs_time.tow * S_TO_MS;
     new_sbp_obs->header.t.ns_residual = 0;
 
-    rtcm3_msm_to_sbp(new_rtcm_obs, new_sbp_obs);
+    rtcm3_msm_to_sbp(new_rtcm_obs, new_sbp_obs, state);
 
     /* Check if the buffer already has obs of the same time */
     if (sbp_obs_buffer->header.n_obs != 0 &&
@@ -960,7 +969,8 @@ static bool get_sid_from_msm(const rtcm_msm_header *header,
   }
 }
 
-void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
+void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs,
+                      struct rtcm3_sbp_state *state) {
   uint8_t num_sats =
       count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg->header.satellite_mask);
   uint8_t num_sigs =
@@ -974,6 +984,14 @@ void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs) {
         const rtcm_msm_signal_data *data = &msg->signals[cell_index];
         if (get_sid_from_msm(&msg->header, sat, sig, &sid) &&
             data->flags.valid_pr == 1 && data->flags.valid_cp == 1) {
+          if (new_sbp_obs->header.n_obs >= MAX_OBS_PER_EPOCH) {
+            /* TODO: Get the stn ID as well */
+            uint8_t log_msg[] = "Too many RTCM observations received!";
+            send_sbp_log_message(
+                RTCM_BUFF_FULL_LOGGING_LEVEL, log_msg, sizeof(log_msg), 0, state);
+            return;
+          }
+
           packed_obs_content_t *sbp_freq =
               &new_sbp_obs->obs[new_sbp_obs->header.n_obs];
           sbp_freq->flags = 0;
