@@ -955,6 +955,9 @@ void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
     sbp_obs_buffer->header.n_obs = obs_index_buffer;
     sbp_obs_buffer->header.t = new_sbp_obs->header.t;
 
+    u16 len = SBP_HDR_SIZE + obs_index_buffer * SBP_OBS_SIZE;
+    assert(len <= OBS_BUFFER_SIZE);
+
     /* If we aren't expecting another message, send the buffer */
     if (new_rtcm_obs->header.multiple == 0) {
       send_observations(state);
