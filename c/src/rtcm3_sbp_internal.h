@@ -25,9 +25,9 @@
 #define MSG_OBS_FLAGS_HALF_CYCLE_KNOWN ((u8)(1 << 2))
 #define MSG_OBS_FLAGS_DOPPLER_VALID ((u8)(1 << 3))
 
-#define RTCM_1029_LOGGING_LEVEL (6u) /* This represents LOG_INFO */
-#define RTCM_MSM_LOGGING_LEVEL (4u)  /* This represents LOG_WARN */
-#define RTCM_BUFFER_FULL_LOGGING_LEVEL (3u)  /* This represents LOG_ERROR */
+#define RTCM_1029_LOGGING_LEVEL (6u)        /* This represents LOG_INFO */
+#define RTCM_MSM_LOGGING_LEVEL (4u)         /* This represents LOG_WARN */
+#define RTCM_BUFFER_FULL_LOGGING_LEVEL (3u) /* This represents LOG_ERROR */
 
 #define MS_TO_S 1e-3
 #define S_TO_MS 1e3
@@ -124,7 +124,8 @@ void sbp_to_rtcm3_1230(const msg_glo_biases_t *sbp_glo_bias,
 
 void encode_RTCM_obs(const rtcm_obs_message *rtcm_msg);
 
-void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs, msg_obs_t *sbp_obs,
+void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs,
+                  msg_obs_t *sbp_obs,
                   struct rtcm3_sbp_state *state);
 
 void add_gps_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
@@ -157,16 +158,17 @@ void send_sbp_log_message(const uint8_t level,
                           const uint8_t *message,
                           const uint16_t length,
                           const uint16_t stn_id,
-                          struct rtcm3_sbp_state *state);
+                          const struct rtcm3_sbp_state *state);
 
 void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state);
 
-void send_buffer_full_error(struct rtcm3_sbp_state *state);
+void send_buffer_full_error(const struct rtcm3_sbp_state *state);
 
 void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
                            struct rtcm3_sbp_state *state);
 
-void rtcm3_msm_to_sbp(const rtcm_msm_message *msg, msg_obs_t *new_sbp_obs,
-                      struct rtcm3_sbp_state *state);
+void rtcm3_msm_to_sbp(const rtcm_msm_message *msg,
+                      msg_obs_t *new_sbp_obs,
+                      const struct rtcm3_sbp_state *state);
 
 #endif /* GNSS_CONVERTERS_RTCM3_SBP_H */

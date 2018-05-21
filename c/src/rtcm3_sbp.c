@@ -47,8 +47,7 @@ void rtcm2sbp_init(
   state->sent_msm_warning = false;
   state->using_msm = false;
 
-  const msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
-  memset((void *)sbp_obs_buffer, 0, sizeof(*sbp_obs_buffer));
+  memset(state->obs_buffer, 0, OBS_BUFFER_SIZE);
 }
 
 static double gps_diff_time(const gps_time_sec_t *end,
@@ -303,10 +302,9 @@ void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
                        gps_time_sec_t *obs_time,
                        struct rtcm3_sbp_state *state) {
   /* Transform the newly received obs to sbp */
-  u8 new_obs[sizeof(observation_header_t) +
-             MAX_OBS_PER_EPOCH * sizeof(packed_obs_content_t)];
+  u8 new_obs[OBS_BUFFER_SIZE];
+  memset(new_obs, 0, OBS_BUFFER_SIZE);
   msg_obs_t *new_sbp_obs = (msg_obs_t *)(new_obs);
-  memset((void *)new_sbp_obs, 0, sizeof(*new_sbp_obs));
 
   /* Find the buffer of obs to be sent */
   msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
@@ -362,11 +360,11 @@ void send_observations(struct rtcm3_sbp_state *state) {
   assert(total_messages <= SBP_MAX_OBS_SEQ);
 
   u8 obs_count = 0;
-  u8 obs_data[SBP_FRAMING_MAX_PAYLOAD_SIZE];
-  msg_obs_t *sbp_obs = (msg_obs_t *)obs_data;
 
   for (u8 msg_num = 0; msg_num < total_messages; ++msg_num) {
+    u8 obs_data[SBP_FRAMING_MAX_PAYLOAD_SIZE];
     memset(obs_data, 0, SBP_FRAMING_MAX_PAYLOAD_SIZE);
+    msg_obs_t *sbp_obs = (msg_obs_t *)obs_data;
 
     u8 obs_index = 0;
     while (obs_index < MAX_OBS_IN_SBP &&
@@ -382,7 +380,8 @@ void send_observations(struct rtcm3_sbp_state *state) {
 
     state->cb_rtcm_to_sbp(SBP_MSG_OBS, len, obs_data, state->sender_id);
   }
-  memset((void *)sbp_obs_buffer, 0, sizeof(*sbp_obs_buffer));
+  /* clear the buffer, so header.n_obs is set to zero */
+  memset(state->obs_buffer, 0, OBS_BUFFER_SIZE);
 }
 
 /** Convert navigation_measurement_t.lock_time into SBP lock time.
@@ -855,7 +854,7 @@ void send_sbp_log_message(const uint8_t level,
                           const uint8_t *message,
                           const uint16_t length,
                           const uint16_t stn_id,
-                          struct rtcm3_sbp_state *state) {
+                          const struct rtcm3_sbp_state *state) {
   u8 frame_buffer[SBP_FRAMING_MAX_PAYLOAD_SIZE];
   msg_log_t *sbp_log_msg = (msg_log_t *)frame_buffer;
   sbp_log_msg->level = level;
@@ -881,7 +880,7 @@ void send_MSM_warning(const uint8_t *frame, struct rtcm3_sbp_state *state) {
   }
 }
 
-void send_buffer_full_error(struct rtcm3_sbp_state *state) {
+void send_buffer_full_error(const struct rtcm3_sbp_state *state) {
   /* TODO: Get the stn ID as well */
   uint8_t log_msg[] = "Too many RTCM observations received!";
   send_sbp_log_message(
@@ -918,10 +917,9 @@ void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
     state->last_gps_time.tow = obs_time.tow;
 
     /* Transform the newly received obs to sbp */
-    u8 new_obs[sizeof(observation_header_t) +
-               MAX_OBS_PER_EPOCH * sizeof(packed_obs_content_t)];
+    u8 new_obs[OBS_BUFFER_SIZE];
+    memset(new_obs, 0, OBS_BUFFER_SIZE);
     msg_obs_t *new_sbp_obs = (msg_obs_t *)(new_obs);
-    memset((void *)new_sbp_obs, 0, sizeof(*new_sbp_obs));
 
     /* Find the buffer of obs to be sent */
     msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
@@ -981,7 +979,7 @@ static bool get_sid_from_msm(const rtcm_msm_header *header,
 
 void rtcm3_msm_to_sbp(const rtcm_msm_message *msg,
                       msg_obs_t *new_sbp_obs,
-                      struct rtcm3_sbp_state *state) {
+                      const struct rtcm3_sbp_state *state) {
   uint8_t num_sats =
       count_mask_bits(MSM_SATELLITE_MASK_SIZE, msg->header.satellite_mask);
   uint8_t num_sigs =
