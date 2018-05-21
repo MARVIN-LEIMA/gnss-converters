@@ -18,6 +18,8 @@
 #include <string.h>
 #include "rtcm3_sbp_internal.h"
 
+#include <stdio.h>
+
 static void validate_base_obs_sanity(struct rtcm3_sbp_state *state,
                                      gps_time_sec_t *obs_time,
                                      const gps_time_sec_t *rover_time);
@@ -378,6 +380,11 @@ void send_observations(struct rtcm3_sbp_state *state) {
     u16 len = SBP_HDR_SIZE + obs_index * SBP_OBS_SIZE;
     assert(len <= SBP_FRAMING_MAX_PAYLOAD_SIZE);
 
+    printf("  sending message %d/%d, n_obs %d, len %d\n",
+           msg_num,
+           total_messages,
+           sbp_obs->header.n_obs,
+           len);
     state->cb_rtcm_to_sbp(SBP_MSG_OBS, len, obs_data, state->sender_id);
   }
   /* clear the buffer, so header.n_obs is set to zero */
@@ -955,10 +962,19 @@ void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
     sbp_obs_buffer->header.n_obs = obs_index_buffer;
     sbp_obs_buffer->header.t = new_sbp_obs->header.t;
 
+    printf("msg %d, t=%d, n_obs=%d, multiple=%d\n",
+           new_rtcm_obs->header.msg_num,
+           sbp_obs_buffer->header.t.tow / 1000,
+           sbp_obs_buffer->header.n_obs,
+           new_rtcm_obs->header.multiple);
+
     /* If we aren't expecting another message, send the buffer */
     if (new_rtcm_obs->header.multiple == 0) {
       send_observations(state);
     }
+  } else {
+    printf("Diff from last %.1f s, discarding obs\n",
+           gps_diff_time(&obs_time, &state->last_gps_time));
   }
 }
 
