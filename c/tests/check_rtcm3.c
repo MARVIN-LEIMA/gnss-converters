@@ -188,6 +188,13 @@ START_TEST(test_msm_reject) {
 }
 END_TEST
 
+/* Test parsing of raw file with MSM7 obs */
+START_TEST(test_msm7_parse) {
+  test_RTCM3(
+      RELATIVE_PATH_PREFIX "/data/msm7.rtcm", sbp_callback_msm, current_time);
+}
+END_TEST
+
 /* Test 1033 message sources */
 START_TEST(test_bias_trm) {
   set_expected_bias(
@@ -352,6 +359,7 @@ Suite *rtcm3_suite(void) {
   tcase_add_test(tc_core, test_glo_day_rollover);
   tcase_add_test(tc_core, test_1012_first);
   tcase_add_test(tc_core, test_msm_reject);
+  tcase_add_test(tc_core, test_msm7_parse);
   suite_add_tcase(s, tc_core);
 
   TCase *tc_biases = tcase_create("Biases");
