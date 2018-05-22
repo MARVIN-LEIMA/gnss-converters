@@ -346,7 +346,7 @@ void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
 }
 
 /**
- * Send the sbp message obs buffer
+ * Split the observation buffer into SBP messages and send them
  */
 void send_observations(struct rtcm3_sbp_state *state) {
   const msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
@@ -356,31 +356,36 @@ void send_observations(struct rtcm3_sbp_state *state) {
   const u8 total_messages =
       1 + ((sbp_obs_buffer->header.n_obs - 1) / MAX_OBS_IN_SBP);
 
-  assert(sbp_obs_buffer->header.n_obs > 0);
+  assert(sbp_obs_buffer->header.n_obs <= MAX_OBS_PER_EPOCH);
   assert(total_messages <= SBP_MAX_OBS_SEQ);
 
-  u8 obs_count = 0;
-
+  /* Write the SBP observation messages */
+  u8 buffer_obs_index = 0;
   for (u8 msg_num = 0; msg_num < total_messages; ++msg_num) {
     u8 obs_data[SBP_FRAMING_MAX_PAYLOAD_SIZE];
     memset(obs_data, 0, SBP_FRAMING_MAX_PAYLOAD_SIZE);
     msg_obs_t *sbp_obs = (msg_obs_t *)obs_data;
 
+    /* Write the header */
+    sbp_obs->header.t = sbp_obs_buffer->header.t;
+    /* Note: SBP n_obs puts total messages in the first nibble and msg_num in
+     * the second. This differs from all the other instances of n_obs in this
+     * module where it is used as observation count. */
+    sbp_obs->header.n_obs = (total_messages << 4) + msg_num;
+
+    /* Write the observations */
     u8 obs_index = 0;
     while (obs_index < MAX_OBS_IN_SBP &&
-           obs_count < sbp_obs_buffer->header.n_obs) {
-      sbp_obs->obs[obs_index++] = sbp_obs_buffer->obs[obs_count++];
+           buffer_obs_index < sbp_obs_buffer->header.n_obs) {
+      sbp_obs->obs[obs_index++] = sbp_obs_buffer->obs[buffer_obs_index++];
     }
-
-    sbp_obs->header.t = sbp_obs_buffer->header.t;
-    sbp_obs->header.n_obs = (total_messages << 4) + msg_num;
 
     u16 len = SBP_HDR_SIZE + obs_index * SBP_OBS_SIZE;
     assert(len <= SBP_FRAMING_MAX_PAYLOAD_SIZE);
 
     state->cb_rtcm_to_sbp(SBP_MSG_OBS, len, obs_data, state->sender_id);
   }
-  /* clear the buffer, so header.n_obs is set to zero */
+  /* clear the observation buffer, so also header.n_obs is set to zero */
   memset(state->obs_buffer, 0, OBS_BUFFER_SIZE);
 }
 
@@ -948,6 +953,9 @@ void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
         send_buffer_full_error(state);
         break;
       }
+
+      u16 len = SBP_HDR_SIZE + (obs_index_buffer + 1) * SBP_OBS_SIZE;
+      assert(len <= OBS_BUFFER_SIZE);
 
       sbp_obs_buffer->obs[obs_index_buffer] = new_sbp_obs->obs[obs_count];
       obs_index_buffer++;
