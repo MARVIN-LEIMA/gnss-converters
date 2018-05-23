@@ -44,11 +44,11 @@ struct rtcm3_sbp_state {
   gps_time_sec_t last_gps_time;
   gps_time_sec_t last_glo_time;
   gps_time_sec_t last_1230_received;
+  gps_time_sec_t last_msm_received;
   void (*cb_rtcm_to_sbp)(u16 msg_id, u8 len, u8 *buff, u16 sender_id);
   void (*cb_base_obs_invalid)(double time_diff);
   u8 obs_buffer[OBS_BUFFER_SIZE];
   bool sent_msm_warning;
-  bool using_msm;
 };
 
 void rtcm2sbp_decode_frame(const uint8_t *frame,
