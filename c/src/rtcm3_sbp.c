@@ -1008,9 +1008,10 @@ static bool get_sid_from_msm(const rtcm_msm_header *header,
                              u8 signal_index,
                              sbp_gnss_signal_t *sid) {
   code_t code = msm_signal_to_code(header, signal_index);
-  if (CODE_INVALID != code) {
+  u8 sat = msm_sat_to_prn(header, satellite_index);
+  if (CODE_INVALID != code && PRN_INVALID != sat) {
     sid->code = code;
-    sid->sat = msm_sat_to_prn(header, satellite_index);
+    sid->sat = sat;
     return true;
   } else {
     return false;
