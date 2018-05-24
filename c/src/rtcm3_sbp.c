@@ -526,8 +526,13 @@ void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs,
 
         sbp_freq->sid.sat = rtcm_obs->sats[sat].svId;
         if (gps_obs_message(rtcm_obs->header.msg_num)) {
-          sbp_freq->sid.code =
-              get_gps_sbp_code(freq, rtcm_obs->sats[sat].obs[freq].code);
+          if (sbp_freq->sid.sat < 40) {
+            sbp_freq->sid.code =
+                get_gps_sbp_code(freq, rtcm_obs->sats[sat].obs[freq].code);
+          } else {
+            sbp_freq->sid.code = freq == 0 ? CODE_SBAS_L1CA : CODE_INVALID;
+            sbp_freq->sid.sat += 80;
+          }
         } else if (glo_obs_message(rtcm_obs->header.msg_num)) {
           sbp_freq->sid.code =
               get_glo_sbp_code(freq, rtcm_obs->sats[sat].obs[freq].code);
