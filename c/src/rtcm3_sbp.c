@@ -928,6 +928,13 @@ void add_msm_obs_to_buffer(const rtcm_msm_message *new_rtcm_obs,
 
   if (INVALID_TIME == state->last_gps_time.wn ||
       gps_diff_time(&obs_time, &state->last_gps_time) >= 0.0) {
+    if (INVALID_TIME == state->last_msm_received.wn &&
+        INVALID_TIME != state->last_gps_time.wn) {
+      /* First MSM observation but last_gps_time is already set: possibly
+       * switched to MSM from legacy stream, so clear the buffer to avoid
+       * duplicate observations */
+      memset(state->obs_buffer, 0, OBS_BUFFER_SIZE);
+    }
     state->last_gps_time.wn = obs_time.wn;
     state->last_gps_time.tow = obs_time.tow;
     state->last_glo_time.wn = obs_time.wn;

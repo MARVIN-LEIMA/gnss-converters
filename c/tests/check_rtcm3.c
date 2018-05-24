@@ -161,8 +161,23 @@ void sbp_callback_msm_switch(u16 msg_id, u8 length, u8 *buffer, u16 sender_id) {
     if (previous_obs_tow > 0) {
       /* make sure time does not run backwards */
       ck_assert_uint_ge(sbp_obs->header.t.tow, previous_obs_tow);
-      /* check there aren't too long gabs between observations */
+      /* check there aren't too long gaps between observations */
       ck_assert((sbp_obs->header.t.tow - previous_obs_tow) < MAX_OBS_GAP_MS);
+    }
+    previous_obs_tow = sbp_obs->header.t.tow;
+  }
+}
+
+void sbp_callback_msm_mixed(u16 msg_id, u8 length, u8 *buffer, u16 sender_id) {
+  (void)length;
+  (void)sender_id;
+
+  static u32 previous_obs_tow = 0;
+  if (msg_id == SBP_MSG_OBS) {
+    msg_obs_t *sbp_obs = (msg_obs_t *)buffer;
+    if (previous_obs_tow > 0) {
+      /* make sure time does not run backwards */
+      ck_assert_uint_ge(sbp_obs->header.t.tow, previous_obs_tow);
     }
     previous_obs_tow = sbp_obs->header.t.tow;
   }
@@ -300,6 +315,18 @@ START_TEST(test_msm_switching) {
   current_time.tow = 308700;
   test_RTCM3(RELATIVE_PATH_PREFIX "/data/switch-legacy-msm-legacy-msm.rtcm",
              sbp_callback_msm_switch,
+             current_time);
+}
+END_TEST
+
+/* parse an artificially generated stream with both legacy and MSM observations,
+ * verify there's no crash
+ */
+START_TEST(test_msm_mixed) {
+  current_time.wn = 2002;
+  current_time.tow = 375900;
+  test_RTCM3(RELATIVE_PATH_PREFIX "/data/mixed-msm-legacy.rtcm",
+             sbp_callback_msm_mixed,
              current_time);
 }
 END_TEST
@@ -469,13 +496,6 @@ Suite *rtcm3_suite(void) {
   tcase_add_test(tc_core, test_1012_first);
   suite_add_tcase(s, tc_core);
 
-  TCase *tc_msm = tcase_create("MSM");
-  tcase_add_checked_fixture(tc_msm, rtcm3_setup_basic, NULL);
-  tcase_add_test(tc_core, test_msm_reject);
-  tcase_add_test(tc_core, test_msm7_parse);
-  tcase_add_test(tc_core, test_msm_switching);
-  suite_add_tcase(s, tc_msm);
-
   TCase *tc_biases = tcase_create("Biases");
   tcase_add_checked_fixture(tc_biases, rtcm3_setup_basic, NULL);
   tcase_add_test(tc_biases, test_bias_trm);
@@ -502,6 +522,14 @@ Suite *rtcm3_suite(void) {
   tcase_add_test(tc_gpp_biases, test_bias_gpp_tps1);
   tcase_add_test(tc_gpp_biases, test_bias_gpp_trm);
   suite_add_tcase(s, tc_gpp_biases);
+
+  TCase *tc_msm = tcase_create("MSM");
+  tcase_add_checked_fixture(tc_msm, rtcm3_setup_basic, NULL);
+  tcase_add_test(tc_msm, test_msm_reject);
+  tcase_add_test(tc_msm, test_msm7_parse);
+  tcase_add_test(tc_msm, test_msm_switching);
+  tcase_add_test(tc_msm, test_msm_mixed);
+  suite_add_tcase(s, tc_msm);
 
   return s;
 }
