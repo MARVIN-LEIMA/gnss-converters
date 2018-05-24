@@ -354,6 +354,10 @@ void add_obs_to_buffer(const rtcm_obs_message *new_rtcm_obs,
 void send_observations(struct rtcm3_sbp_state *state) {
   const msg_obs_t *sbp_obs_buffer = (msg_obs_t *)state->obs_buffer;
 
+  if (sbp_obs_buffer->header.n_obs == 0) {
+    return;
+  }
+
   /* We want the ceiling of n_obs divided by max obs in a single message to get
    * total number of messages needed */
   const u8 total_messages =
