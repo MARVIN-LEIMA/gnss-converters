@@ -526,16 +526,28 @@ void rtcm3_to_sbp(const rtcm_obs_message *rtcm_obs,
 
         sbp_freq->sid.sat = rtcm_obs->sats[sat].svId;
         if (gps_obs_message(rtcm_obs->header.msg_num)) {
-          if (sbp_freq->sid.sat < 40) {
+          if (sbp_freq->sid.sat >= 1 && sbp_freq->sid.sat <= 32) {
+            /* GPS PRN, see DF009 */
             sbp_freq->sid.code =
                 get_gps_sbp_code(freq, rtcm_obs->sats[sat].obs[freq].code);
-          } else {
-            sbp_freq->sid.code = freq == 0 ? CODE_SBAS_L1CA : CODE_INVALID;
+          } else if (sbp_freq->sid.sat >= 40 && sbp_freq->sid.sat <= 58 &&
+                     freq == 0) {
+            /* SBAS L1 PRN */
+            sbp_freq->sid.code = CODE_SBAS_L1CA;
             sbp_freq->sid.sat += 80;
+          } else {
+            /* invalid PRN or code */
+            continue;
           }
         } else if (glo_obs_message(rtcm_obs->header.msg_num)) {
-          sbp_freq->sid.code =
-              get_glo_sbp_code(freq, rtcm_obs->sats[sat].obs[freq].code);
+          if (sbp_freq->sid.sat >= 1 && sbp_freq->sid.sat <= 24) {
+            /* GLO PRN, see DF038 */
+            sbp_freq->sid.code =
+                get_glo_sbp_code(freq, rtcm_obs->sats[sat].obs[freq].code);
+          } else {
+            /* invalid PRN or slot number uknown*/
+            continue;
+          }
         }
 
         if (rtcm_freq->flags.valid_pr == 1) {
