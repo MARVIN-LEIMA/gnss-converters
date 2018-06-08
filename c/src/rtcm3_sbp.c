@@ -801,8 +801,8 @@ void rtcm2sbp_set_glo_fcn(sbp_gnss_signal_t sid,
   if (SBP_GLO_FCN_UNKNOWN == sbp_fcn) {
     state->glo_sv_id_fcn_map[sid.sat] = MSM_GLO_FCN_UNKNOWN;
   } else {
-    s16 fcn = sbp_fcn - SBP_GLO_FCN_OFFSET;
-    state->glo_sv_id_fcn_map[sid.sat] = (u8)(fcn + MSM_GLO_FCN_OFFSET);
+    s8 fcn = sbp_fcn - SBP_GLO_FCN_OFFSET;
+    state->glo_sv_id_fcn_map[sid.sat] = fcn + MSM_GLO_FCN_OFFSET;
   }
 }
 
