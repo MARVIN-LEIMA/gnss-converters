@@ -800,10 +800,6 @@ void rtcm2sbp_set_glo_fcn(sbp_gnss_signal_t sid,
     s16 fcn = sbp_fcn - SBP_GLO_FCN_OFFSET;
     state->glo_sv_id_fcn_map[sid.sat] = (u8)fcn + MSM_GLO_FCN_OFFSET;
   }
-  printf("Got FCN %u for GLO sat %d, stored FCN %u\n",
-         sbp_fcn,
-         sid.sat,
-         state->glo_sv_id_fcn_map[sid.sat]);
 }
 
 void compute_gps_time(double tow_ms,
