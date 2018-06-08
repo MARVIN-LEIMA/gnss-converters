@@ -35,9 +35,6 @@
 /* MAX valid value (ms) for GPS is 604799999 and GLO is 86401999 */
 #define INVALID_TIME 0xFFFF
 
-/* GLO FCN map size is number of GLO satellites + 1 */
-#define NUM_GLO_MAP_INDICES 29
-
 #define SBP_GLO_FCN_OFFSET 8
 #define SBP_GLO_FCN_UNKNOWN 0
 
@@ -55,7 +52,8 @@ struct rtcm3_sbp_state {
   void (*cb_base_obs_invalid)(double time_diff);
   u8 obs_buffer[OBS_BUFFER_SIZE];
   bool sent_msm_warning;
-  u8 glo_sv_id_fcn_map[NUM_GLO_MAP_INDICES];
+  /* GLO FCN map, indexed by 1-based PRN */
+  u8 glo_sv_id_fcn_map[GLO_LAST_PRN + 1];
 };
 
 void rtcm2sbp_decode_frame(const uint8_t *frame,

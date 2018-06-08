@@ -49,7 +49,7 @@ void rtcm2sbp_init(
 
   state->sent_msm_warning = false;
 
-  for (u8 i = 0; i < NUM_GLO_MAP_INDICES; i++) {
+  for (u8 i = 0; i < GLO_LAST_PRN + 1; i++) {
     state->glo_sv_id_fcn_map[i] = MSM_GLO_FCN_UNKNOWN;
   }
 
@@ -794,11 +794,15 @@ void rtcm2sbp_set_glo_fcn(sbp_gnss_signal_t sid,
                           u8 sbp_fcn,
                           struct rtcm3_sbp_state *state) {
   /* convert FCN from SBP representation to RTCM representation */
+  if(sid.sat < GLO_FIRST_PRN || sid.sat > GLO_LAST_PRN) {
+    /* invalid PRN */
+    return;
+  }
   if (SBP_GLO_FCN_UNKNOWN == sbp_fcn) {
     state->glo_sv_id_fcn_map[sid.sat] = MSM_GLO_FCN_UNKNOWN;
   } else {
     s16 fcn = sbp_fcn - SBP_GLO_FCN_OFFSET;
-    state->glo_sv_id_fcn_map[sid.sat] = (u8)fcn + MSM_GLO_FCN_OFFSET;
+    state->glo_sv_id_fcn_map[sid.sat] = (u8)(fcn + MSM_GLO_FCN_OFFSET);
   }
 }
 
