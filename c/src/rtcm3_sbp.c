@@ -1122,8 +1122,6 @@ bool unsupported_signal(sbp_gnss_signal_t* sid) {
     case CODE_GAL_E6B:
     case CODE_GAL_E6C:
     case CODE_GAL_E6X:
-    case CODE_GAL_E7Q:
-    case CODE_GAL_E7X:
     case CODE_GAL_E5I:
     case CODE_GAL_E5Q:
     case CODE_GAL_E5X:
