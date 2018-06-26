@@ -18,7 +18,6 @@
 #include <rtcm3_msm_utils.h>
 #include <stdio.h>
 #include <string.h>
-#include <libsbp/gnss.h>
 #include "rtcm3_sbp_internal.h"
 
 static void validate_base_obs_sanity(struct rtcm3_sbp_state *state,
@@ -1123,10 +1122,19 @@ bool unsupported_signal(sbp_gnss_signal_t* sid) {
     case CODE_GAL_E6B:
     case CODE_GAL_E6C:
     case CODE_GAL_E6X:
-    case CODE_GAL_E7I:
     case CODE_GAL_E7Q:
     case CODE_GAL_E7X:
+    case CODE_GAL_E5I:
+    case CODE_GAL_E5Q:
+    case CODE_GAL_E5X:
     case CODE_GAL_E8:
+    case CODE_QZS_L1CA:
+    case CODE_QZS_L2CM:
+    case CODE_QZS_L2CL:
+    case CODE_QZS_L2CX:
+    case CODE_QZS_L5I:
+    case CODE_QZS_L5Q:
+    case CODE_QZS_L5X:
       return true;
     default:
       return false;
