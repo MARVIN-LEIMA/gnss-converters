@@ -50,8 +50,8 @@ void rtcm3_gps_eph_to_sbp(rtcm_msg_eph *msg_eph, msg_ephemeris_gps_t *sbp_gps_ep
 
   sbp_gps_eph->toc.wn = msg_eph->wn;
   sbp_gps_eph->toc.tow = msg_eph->kepler.toc;
-
 }
+
 void rtcm3_glo_eph_to_sbp(rtcm_msg_eph *msg_eph, msg_ephemeris_glo_t *sbp_glo_eph) {
   sbp_glo_eph->common.toe.wn = msg_eph->wn;
 }

@@ -114,6 +114,19 @@ void sbp_callback_gps(u16 msg_id, u8 length, u8 *buffer, u16 sender_id) {
   msg_count++;
 }
 
+void sbp_callback_gps_eph(u16 msg_id, u8 length, u8 *buffer, u16 sender_id) {
+  (void)length;
+  (void)sender_id;
+  (void)buffer;
+  static bool checked_eph = false;
+  /* ignore log messages */
+  if (msg_id == SBP_MSG_EPHEMERIS_GPS && !checked_eph) {
+    checked_eph = true;
+    // TODO(anthony) Verify each field
+    return;
+  }
+}
+
 void sbp_callback_1012_first(u16 msg_id, u8 length, u8 *buffer, u16 sender_id) {
   (void)length;
   (void)buffer;
@@ -661,6 +674,13 @@ START_TEST(test_gps_diff_time_sec) {
 }
 END_TEST
 
+START_TEST(tc_rtcm_eph_gps) {
+  test_RTCM3(RELATIVE_PATH_PREFIX "/data/eph.rtcm",
+             sbp_callback_gps_eph,
+             current_time);
+}
+END_TEST
+
 Suite *rtcm3_suite(void) {
   Suite *s = suite_create("RTCMv3");
 
@@ -713,6 +733,14 @@ Suite *rtcm3_suite(void) {
   tcase_add_test(tc_utils, test_compute_glo_time);
   tcase_add_test(tc_utils, test_gps_diff_time_sec);
   suite_add_tcase(s, tc_utils);
+
+  TCase *tc_eph = tcase_create("ephemeris");
+  tcase_add_checked_fixture(tc_eph, rtcm3_setup_basic, NULL);
+  tcase_add_test(tc_eph, tc_rtcm_eph_gps);
+  // tcase_add_test(tc_eph, tc_rtcm_eph_glo);
+  // tcase_add_test(tc_eph, tc_rtcm_eph_gal);
+  // tcase_add_test(tc_eph, tc_rtcm_eph_bds);
+  suite_add_tcase(s, tc_eph);
 
   return s;
 }
