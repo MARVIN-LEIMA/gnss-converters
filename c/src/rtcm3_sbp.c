@@ -178,6 +178,28 @@ void rtcm2sbp_decode_frame(const uint8_t *frame,
       }
       break;
     }
+    case 1019: {
+      rtcm_msg_eph msg_eph;
+      if (RC_OK == rtcm3_decode_eph(&frame[byte], &msg_eph)){
+        msg_ephemeris_gps_t sbp_gps_eph;
+        rtcm3_gps_eph_to_sbp(&msg_eph, &sbp_gps_eph);
+        state->cb_rtcm_to_sbp(SBP_MSG_EPHEMERIS_GPS,
+                              (u8)sizeof(sbp_gps_eph),
+                              (u8 *)&sbp_gps_eph,
+                              rtcm_2_sbp_sender_id(0));
+      }
+    }
+    case 1020: {
+      rtcm_msg_eph msg_eph;
+      if (RC_OK == rtcm3_decode_eph(&frame[byte], &msg_eph)){
+        msg_ephemeris_glo_t sbp_glo_eph;
+        rtcm3_glo_eph_to_sbp(&msg_eph, &sbp_glo_eph);
+        state->cb_rtcm_to_sbp(SBP_MSG_EPHEMERIS_GPS,
+                              (u8)sizeof(sbp_glo_eph),
+                              (u8 *)&sbp_glo_eph,
+                              rtcm_2_sbp_sender_id(0));
+      }
+    }
     case 1029: {
       rtcm_msg_1029 msg_1029;
       if (RC_OK == rtcm3_decode_1029(&frame[byte], &msg_1029)) {
